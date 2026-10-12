@@ -1,0 +1,349 @@
+
+import java.util.*;
+import java.io.*;
+
+public class Main {
+    static Scanner sc = new Scanner(System.in);
+    static Random rand = new Random();
+
+    static String name = "Hero";
+    static int health = 100, gold = 50, score = 0;
+    static int potions = 3, keys = 0, treasures = 0;
+    static int damage = 15, level = 1;
+    static boolean dragonDefeated = false;
+    static Set<String> inventory = new LinkedHashSet<>();
+
+    static void status() {
+        System.out.println("\n=== HERO STATUS ===");
+        System.out.println("Name: " + name);
+        System.out.println("Health: " + health);
+        System.out.println("Gold: " + gold);
+        System.out.println("Score: " + score);
+        System.out.println("Level: " + level);
+        System.out.println("Potions: " + potions);
+        System.out.println("Treasures: " + treasures);
+        System.out.println("Inventory: " + inventory);
+    }
+
+    static void battle(String enemy, int enemyHealth, int enemyDamage) {
+        System.out.println("\nA " + enemy + " appears!");
+
+        while (health > 0 && enemyHealth > 0) {
+            System.out.println("\nYour HP: " + health
+                    + " | Enemy HP: " + enemyHealth);
+            System.out.println("1. Attack");
+            System.out.println("2. Drink potion");
+            System.out.println("3. Escape");
+            System.out.print("Choice: ");
+
+            String choice = sc.nextLine();
+
+            if (choice.equals("1")) {
+                int hit = damage + rand.nextInt(10);
+                enemyHealth -= hit;
+                System.out.println("You dealt " + hit + " damage!");
+
+                if (enemyHealth > 0) {
+                    int enemyHit = enemyDamage + rand.nextInt(6);
+                    health -= enemyHit;
+                    System.out.println(enemy + " dealt "
+                            + enemyHit + " damage!");
+                }
+            } else if (choice.equals("2")) {
+                if (potions > 0) {
+                    potions--;
+                    health = Math.min(100, health + 30);
+                    System.out.println("You recovered 30 health!");
+                } else {
+                    System.out.println("No potions available!");
+                }
+                if (enemyHealth > 0) health -= enemyDamage;
+            } else if (choice.equals("3")) {
+                System.out.println("You escaped!");
+                return;
+            } else {
+                System.out.println("Invalid choice!");
+            }
+        }
+
+        if (health <= 0) {
+            health = 0;
+            System.out.println("You were defeated!");
+        } else {
+            int reward = 20 + rand.nextInt(31);
+            gold += reward;
+            score += 20;
+            System.out.println("Enemy defeated! Reward: " + reward + " gold.");
+        }
+    }
+
+    static void village() {
+        while (true) {
+            System.out.println("\n=== VILLAGE ===");
+            System.out.println("1. Buy potion (20 gold)");
+            System.out.println("2. Buy iron sword (40 gold)");
+            System.out.println("3. Rest (15 gold)");
+            System.out.println("4. Talk to elder");
+            System.out.println("5. Leave village");
+            System.out.print("Choice: ");
+
+            String c = sc.nextLine();
+
+            switch (c) {
+                case "1":
+                    if (gold >= 20) {
+                        gold -= 20;
+                        potions++;
+                        inventory.add("Healing Potion");
+                        System.out.println("Potion purchased!");
+                    } else System.out.println("Not enough gold!");
+                    break;
+
+                case "2":
+                    if (gold >= 40 && damage < 25) {
+                        gold -= 40;
+                        damage = 25;
+                        inventory.add("Iron Sword");
+                        System.out.println("Iron sword equipped!");
+                    } else System.out.println("Cannot buy sword!");
+                    break;
+
+                case "3":
+                    if (gold >= 15) {
+                        gold -= 15;
+                        health = 100;
+                        System.out.println("Health restored!");
+                    } else System.out.println("Not enough gold!");
+                    break;
+
+                case "4":
+                    System.out.println(
+                        "Elder: Find the key in the forest.");
+                    System.out.println(
+                        "Then enter the castle and defeat the dragon!");
+                    break;
+
+                case "5":
+                    return;
+
+                default:
+                    System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    static void forest() {
+        System.out.println("\nYou enter the mysterious forest.");
+
+        if (keys == 0) {
+            keys++;
+            inventory.add("Castle Key");
+            System.out.println("You found the Castle Key!");
+            score += 10;
+        }
+
+        if (rand.nextInt(100) < 60) {
+            battle("Forest Wolf", 40, 8);
+        } else {
+            gold += 10;
+            System.out.println("You found 10 gold on the path!");
+        }
+    }
+
+    static void cave() {
+        System.out.println("\nYou enter a dark cave.");
+        System.out.println("1. Search for treasure");
+        System.out.println("2. Fight cave monster");
+        System.out.println("3. Return");
+        System.out.print("Choice: ");
+
+        String c = sc.nextLine();
+
+        if (c.equals("1")) {
+            int reward = rand.nextInt(41) + 10;
+            gold += reward;
+            treasures++;
+            score += 15;
+            System.out.println("You found " + reward + " gold!");
+        } else if (c.equals("2")) {
+            battle("Cave Monster", 60, 12);
+        } else {
+            System.out.println("You leave the cave.");
+        }
+    }
+
+    static void castle() {
+        if (keys == 0) {
+            System.out.println("The castle is locked! Find a key in the forest.");
+            return;
+        }
+
+        if (dragonDefeated) {
+            System.out.println("The castle is already safe.");
+            return;
+        }
+
+        System.out.println("\nYou enter the ancient castle!");
+        battle("Dragon", 100, 18);
+
+        if (health > 0) {
+            dragonDefeated = true;
+            treasures += 3;
+            gold += 100;
+            score += 100;
+            inventory.add("Royal Treasure");
+            System.out.println("\nYou defeated the dragon!");
+            System.out.println("You saved the kingdom!");
+        }
+    }
+
+    static void explore() {
+        System.out.println("\n=== EXPLORE WORLD ===");
+        System.out.println("1. Village");
+        System.out.println("2. Dark Forest");
+        System.out.println("3. Ancient Cave");
+        System.out.println("4. Abandoned Castle");
+        System.out.println("5. River");
+        System.out.println("6. Return");
+        System.out.print("Choice: ");
+
+        String c = sc.nextLine();
+
+        switch (c) {
+            case "1":
+                village();
+                break;
+            case "2":
+                forest();
+                break;
+            case "3":
+                cave();
+                break;
+            case "4":
+                castle();
+                break;
+            case "5":
+                health = Math.min(100, health + 15);
+                System.out.println("You drank river water. Health restored!");
+                break;
+            case "6":
+                return;
+            default:
+                System.out.println("Invalid choice!");
+        }
+    }
+
+    static void saveGame() {
+        try (PrintWriter out = new PrintWriter("adventure_save.txt")) {
+            out.println(name);
+            out.println(health);
+            out.println(gold);
+            out.println(score);
+            out.println(potions);
+            out.println(keys);
+            out.println(treasures);
+            out.println(damage);
+            out.println(level);
+            out.println(dragonDefeated);
+            out.println(inventory.size());
+            for (String item : inventory) out.println(item);
+
+            System.out.println("Game saved successfully!");
+        } catch (IOException e) {
+            System.out.println("Could not save game.");
+        }
+    }
+
+    static void loadGame() {
+        try (Scanner file = new Scanner(
+                new File("adventure_save.txt"))) {
+            name = file.nextLine();
+            health = file.nextInt();
+            gold = file.nextInt();
+            score = file.nextInt();
+            potions = file.nextInt();
+            keys = file.nextInt();
+            treasures = file.nextInt();
+            damage = file.nextInt();
+            level = file.nextInt();
+            dragonDefeated = file.nextBoolean();
+
+            inventory.clear();
+            int count = file.nextInt();
+            file.nextLine();
+
+            for (int i = 0; i < count; i++) {
+                inventory.add(file.nextLine());
+            }
+
+            System.out.println("Saved game loaded!");
+        } catch (Exception e) {
+            System.out.println("No saved game found.");
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("==================================");
+        System.out.println("   MYSTERY WORLD ADVENTURE GAME");
+        System.out.println("==================================");
+        System.out.print("Enter your hero name: ");
+
+        String enteredName = sc.nextLine().trim();
+        if (!enteredName.isEmpty()) name = enteredName;
+
+        inventory.add("Old Map");
+
+        boolean running = true;
+
+        while (running) {
+            if (health <= 0) {
+                System.out.println("\nGAME OVER! Final score: " + score);
+                break;
+            }
+
+            System.out.println("\nWelcome, " + name + "!");
+            System.out.println("1. Explore");
+            System.out.println("2. Hero status");
+            System.out.println("3. Inventory");
+            System.out.println("4. Save game");
+            System.out.println("5. Load game");
+            System.out.println("6. Quit game");
+            System.out.print("Choice: ");
+
+            String choice = sc.nextLine();
+
+            switch (choice) {
+                case "1":
+                    explore();
+                    break;
+
+                case "2":
+                    status();
+                    break;
+
+                case "3":
+                    System.out.println("\nInventory: " + inventory);
+                    break;
+
+                case "4":
+                    saveGame();
+                    break;
+
+                case "5":
+                    loadGame();
+                    break;
+
+                case "6":
+                    System.out.println("Thanks for playing!");
+                    System.out.println("Final score: " + score);
+                    running = false;
+                    break;
+
+                default:
+                    System.out.println("Invalid choice!");
+            }
+        }
+
+        sc.close();
+    }
+}
